@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Optimizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 250px;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0 25px 0;
+        }
+
+        .stat-box {
+            flex: 1;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .result-section h3 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-section h3::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        .suggestions-list {
+            list-style: none;
+        }
+
+        .suggestions-list li {
+            padding: 12px 15px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 3px solid #667eea;
+            line-height: 1.6;
+        }
+
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .skill-tag {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loader.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ AI Resume Optimizer</h1>
+            <p>Get AI-powered suggestions to improve your resume</p>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <label for="resume">Your Resume</label>
+                <textarea id="resume" placeholder="Paste your resume text here..."></textarea>
+                
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-label">Word Count</div>
+                        <div class="stat-value" id="wordCount">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Character Count</div>
+                        <div class="stat-value" id="charCount">0</div>
+                    </div>
+                </div>
+
+                <button id="optimizeBtn" onclick="optimizeResume()">Analyze & Optimize Resume</button>
+                <div class="error" id="error"></div>
+            </div>
+
+            <div class="loader" id="loader">
+                <div class="spinner"></div>
+                <p style="margin-top: 15px; color: #666;">Analyzing your resume...</p>
+            </div>
+
+            <div class="results" id="results">
+                <div class="result-section">
+                    <h3>💡 AI Suggestions</h3>
+                    <ul class="suggestions-list" id="suggestions"></ul>
+                </div>
+
+                <div class="result-section">
+                    <h3>🎯 Key Skills Detected</h3>
+                    <div class="skills-container" id="skills"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const resumeInput = document.getElementById('resume');
+        const wordCountEl = document.getElementById('wordCount');
+        const charCountEl = document.getElementById('charCount');
+        const resultsEl = document.getElementById('results');
+        const loaderEl = document.getElementById('loader');
+        const errorEl = document.getElementById('error');
+        const optimizeBtn = document.getElementById('optimizeBtn');
+
+        // Update word and character count
+        resumeInput.addEventListener('input', updateCounts);
+
+        function updateCounts() {
+            const text = resumeInput.value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            const chars = text.length;
+
+            wordCountEl.textContent = words.toLocaleString();
+            charCountEl.textContent = chars.toLocaleString();
+        }
+
+        async function optimizeResume() {
+            const resume = resumeInput.value.trim();
+            
+            if (!resume) {
+                showError('Please paste your resume first');
+                return;
+            }
+
+            // Hide previous results and errors
+            resultsEl.classList.remove('show');
+            errorEl.classList.remove('show');
+            loaderEl.classList.add('show');
+            optimizeBtn.disabled = true;
+
+            try {
+                // Simulate AI processing with a delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                const result = analyzeResume(resume);
+                displayResults(result);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to analyze resume. Please try again.');
+            } finally {
+                loaderEl.classList.remove('show');
+                optimizeBtn.disabled = false;
+            }
+        }
+
+        function analyzeResume(resume) {
+            const resumeLower = resume.toLowerCase();
+            const suggestions = [];
+            const skills = new Set();
+
+            // Analyze and generate suggestions
+            const wordCount = resume.trim().split(/\s+/).length;
+            
+            // Check for action verbs
+            const actionVerbs = ['led', 'managed', 'developed', 'created', 'implemented', 'achieved', 'increased', 'improved', 'designed', 'launched'];
+            const hasActionVerbs = actionVerbs.some(verb => resumeLower.includes(verb));
+            if (!hasActionVerbs) {
+                suggestions.push('Use strong action verbs (led, managed, developed, achieved) to start your bullet points');
+            }
+
+            // Check for quantifiable achievements
+            const hasNumbers = /\d+%|\$\d+|[0-9]+\+/.test(resume);
+            if (!hasNumbers) {
+                suggestions.push('Add quantifiable achievements (e.g., "Increased sales by 30%" or "Managed team of 5")');
+            }
+
+            // Check length
+            if (wordCount < 200) {
+                suggestions.push('Your resume seems short. Add more details about your experience and accomplishments');
+            } else if (wordCount > 600) {
+                suggestions.push('Consider condensing your resume. Focus on the most relevant and impactful experiences');
+            }
+
+            // Check for common sections
+            if (!resumeLower.includes('education') && !resumeLower.includes('degree')) {
+                suggestions.push('Include an education section with your degrees and certifications');
+            }
+
+            // Check for buzzwords without context
+            if (resumeLower.includes('team player') || resumeLower.includes('hard worker')) {
+                suggestions.push('Replace generic phrases like "team player" with specific examples of collaboration');
+            }
+
+            // Check for passive language
+            if (resumeLower.includes('responsible for') || resumeLower.includes('duties included')) {
+                suggestions.push('Replace passive phrases like "responsible for" with active achievements and results');
+            }
+
+            // Always add some best practices
+            if (suggestions.length < 3) {
+                suggestions.push('Tailor your resume to match the specific job description you\'re applying for');
+            }
+            if (suggestions.length < 4) {
+                suggestions.push('Use consistent formatting for dates, job titles, and bullet points');
+            }
+            if (suggestions.length < 5) {
+                suggestions.push('Proofread carefully for spelling and grammar errors');
+            }
+
+            // Extract skills
+            const commonSkills = {
+                // Technical Skills
+                'javascript': 'JavaScript', 'python': 'Python', 'java': 'Java', 'c++': 'C++',
+                'react': 'React', 'angular': 'Angular', 'vue': 'Vue.js', 'node': 'Node.js',
+                'sql': 'SQL', 'mongodb': 'MongoDB', 'postgresql': 'PostgreSQL',
+                'aws': 'AWS', 'azure': 'Azure', 'gcp': 'Google Cloud',
+                'docker': 'Docker', 'kubernetes': 'Kubernetes',
+                'git': 'Git', 'agile': 'Agile', 'scrum': 'Scrum',
+                
+                // Business Skills
+                'project management': 'Project Management', 'leadership': 'Leadership',
+                'communication': 'Communication', 'analysis': 'Data Analysis',
+                'marketing': 'Marketing', 'sales': 'Sales',
+                'customer service': 'Customer Service', 'strategic planning': 'Strategic Planning',
+                'budgeting': 'Budgeting', 'forecasting': 'Forecasting',
+                
+                // Design Skills
+                'photoshop': 'Photoshop', 'illustrator': 'Illustrator', 'figma': 'Figma',
+                'ui/ux': 'UI/UX Design', 'graphic design': 'Graphic Design',
+                
+                // Other
+                'excel': 'Excel', 'powerpoint': 'PowerPoint', 'word': 'Microsoft Word',
+                'tableau': 'Tableau', 'power bi': 'Power BI',
+                'seo': 'SEO', 'content writing': 'Content Writing',
+                'machine learning': 'Machine Learning', 'ai': 'Artificial Intelligence',
+                'data science': 'Data Science', 'statistics': 'Statistics'
+            };
+
+            for (const [key, value] of Object.entries(commonSkills)) {
+                if (resumeLower.includes(key)) {
+                    skills.add(value);
+                }
+            }
+
+            // Extract years of experience mentions
+            const yearsMatch = resume.match(/(\d+)\+?\s*years?/gi);
+            if (yearsMatch) {
+                yearsMatch.forEach(match => skills.add(match));
+            }
+
+            // If no skills found, add a note
+            const skillsArray = Array.from(skills).slice(0, 15); // Limit to 15 skills
+            if (skillsArray.length === 0) {
+                skillsArray.push('No specific skills detected', 'Add relevant technical or soft skills');
+            }
+
+            return {
+                suggestions: suggestions.slice(0, 5),
+                skills: skillsArray
+            };
+        }
+
+        function displayResults(result) {
+            // Display suggestions
+            const suggestionsEl = document.getElementById('suggestions');
+            suggestionsEl.innerHTML = result.suggestions
+                .map(suggestion => `<li>${suggestion}</li>`)
+                .join('');
+
+            // Display skills
+            const skillsEl = document.getElementById('skills');
+            skillsEl.innerHTML = result.skills
+                .map(skill => `<span class="skill-tag">${skill}</span>`)
+                .join('');
+
+            resultsEl.classList.add('show');
+        }
+
+        function showError(message) {
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+            setTimeout(() => {
+                errorEl.classList.remove('show');
+            }, 5000);
+        }
+
+        // Initialize counts
+        updateCounts();
+    </script>
+</body>
+</html>
